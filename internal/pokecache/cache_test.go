@@ -1,6 +1,9 @@
 package pokecache
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestAddGet(t *testing.T) {
 	cases := []struct {
@@ -11,7 +14,7 @@ func TestAddGet(t *testing.T) {
 		{key: "https://example.com/path", val: []byte("moretestdata")},
 	}
 
-	cache := NewCache()
+	cache := NewCache(5 * time.Second)
 	for _, c := range cases {
 		cache.Add(c.key, c.val)
 	}
@@ -29,7 +32,7 @@ func TestAddGet(t *testing.T) {
 }
 
 func TestGetMissingKey(t *testing.T) {
-	cache := NewCache()
+	cache := NewCache(5 * time.Second)
 	val, ok := cache.Get("missing")
 	if ok {
 		t.Errorf("expected ok to be false for missing key")
@@ -40,7 +43,7 @@ func TestGetMissingKey(t *testing.T) {
 }
 
 func TestReplaceValue(t *testing.T) {
-	cache := NewCache()
+	cache := NewCache(5 * time.Second)
 	cache.Add("key", []byte("first"))
 	cache.Add("key", []byte("second"))
 
@@ -50,5 +53,33 @@ func TestReplaceValue(t *testing.T) {
 	}
 	if string(val) != "second" {
 		t.Errorf("got %q, want %q", val, "second")
+	}
+}
+
+func TestFreshEntryStays(t *testing.T) {
+	const interval = 1 * time.Second
+	cache := NewCache(interval)
+	cache.Add("key", []byte("data"))
+
+	time.Sleep(interval / 10)
+
+	if _, ok := cache.Get("key"); !ok {
+		t.Errorf("expected fresh entry to still be in the cache")
+	}
+}
+
+func TestReapLoop(t *testing.T) {
+	const interval = 10 * time.Millisecond
+	cache := NewCache(interval)
+	cache.Add("key", []byte("data"))
+
+	if _, ok := cache.Get("key"); !ok {
+		t.Fatalf("expected to find key right after adding it")
+	}
+
+	time.Sleep(interval * 5)
+
+	if _, ok := cache.Get("key"); ok {
+		t.Errorf("expected old entry to be reaped")
 	}
 }
