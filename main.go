@@ -1,5 +1,7 @@
 package main
 
 func main() {
-	startRepl()
+	cfg := &config{}
+	cfg.commands = getCommands()
+	startRepl(cfg)
 }

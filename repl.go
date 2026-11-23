@@ -7,10 +7,14 @@ import (
 	"strings"
 )
 
+type config struct {
+	commands map[string]cliCommand
+}
+
 type cliCommand struct {
 	name        string
 	description string
-	callback    func() error
+	callback    func(*config) error
 }
 
 func getCommands() map[string]cliCommand {
@@ -28,7 +32,7 @@ func getCommands() map[string]cliCommand {
 	}
 }
 
-func startRepl() {
+func startRepl(cfg *config) {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print("Pokedex > ")
@@ -42,13 +46,13 @@ func startRepl() {
 		}
 
 		commandName := words[0]
-		command, exists := getCommands()[commandName]
+		command, exists := cfg.commands[commandName]
 		if !exists {
 			fmt.Println("Unknown command")
 			continue
 		}
 
-		if err := command.callback(); err != nil {
+		if err := command.callback(cfg); err != nil {
 			fmt.Println(err)
 		}
 	}
