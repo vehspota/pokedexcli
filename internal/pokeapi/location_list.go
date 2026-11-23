@@ -23,9 +23,7 @@ func (c *Client) ListLocations(pageURL *string) (RespShallowLocations, error) {
 		url = *pageURL
 	}
 
-	// cache hit: unmarshal the saved bytes, no HTTP request
 	if data, ok := c.cache.Get(url); ok {
-		fmt.Println("[cache hit]", url) // TEMP
 		var locations RespShallowLocations
 		if err := json.Unmarshal(data, &locations); err != nil {
 			return RespShallowLocations{}, err
@@ -33,8 +31,6 @@ func (c *Client) ListLocations(pageURL *string) (RespShallowLocations, error) {
 		return locations, nil
 	}
 
-	// cache miss: make the request
-	fmt.Println("[network request]", url) // TEMP
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return RespShallowLocations{}, err
@@ -60,7 +56,6 @@ func (c *Client) ListLocations(pageURL *string) (RespShallowLocations, error) {
 		return RespShallowLocations{}, err
 	}
 
-	// only cache after the request and decoding both succeeded
 	c.cache.Add(url, data)
 	return locations, nil
 }
