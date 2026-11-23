@@ -5,10 +5,15 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/vehspota/pokedexcli/internal/pokeapi"
 )
 
 type config struct {
-	commands map[string]cliCommand
+	commands         map[string]cliCommand
+	pokeapiClient    pokeapi.Client
+	nextLocationsURL *string
+	prevLocationsURL *string
 }
 
 type cliCommand struct {
@@ -23,6 +28,16 @@ func getCommands() map[string]cliCommand {
 			name:        "help",
 			description: "Displays a help message",
 			callback:    commandHelp,
+		},
+		"map": {
+			name:        "map",
+			description: "Displays the next 20 location areas",
+			callback:    commandMapf,
+		},
+		"mapb": {
+			name:        "mapb",
+			description: "Displays the previous 20 location areas",
+			callback:    commandMapb,
 		},
 		"exit": {
 			name:        "exit",
